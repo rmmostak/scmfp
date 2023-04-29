@@ -1,16 +1,5 @@
-# scmfp
+# SCMFP
 
 Smart Aquaculture IoT Device.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This app is responsible to connect with BLE device, get the sensor data and make a deision based on device's parameters and save the entry on the web server. This project is very much useful for the Shrimp farmers of Costal area of Bangladesh.
