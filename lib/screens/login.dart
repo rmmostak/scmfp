@@ -51,23 +51,23 @@ class _LoginState extends State<Login> {
         appBar: AppBar(
           title: const Text('প্রবেশ করুন'),
         ),
-        body: Container(
-            alignment: Alignment.center,
-            height: MediaQuery.of(context).size.height,
-            color: Colors.white,
-            child: Center(
+        body: Center(
+            child: Container(
+                alignment: Alignment.center,
+                height: MediaQuery.of(context).size.height,
+                color: Colors.white,
                 child: Form(
-              key: formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  Text(
-                    'প্রবেশ করুন',
-                    style: Theme.of(context).textTheme.headline5
-                  ),
-                  const SizedBox(height: 20,),
-                  TextFormField(
-                      keyboardType: TextInputType.phone,
+                  key: formKey,
+                  child: ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      Text('প্রবেশ করুন',
+                          style: Theme.of(context).textTheme.headline5),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      TextFormField(
+                          keyboardType: TextInputType.phone,
                       controller: txtPhone,
                       validator: (val) =>
                           val!.isEmpty ? 'সঠিক নম্বরটি দিন' : null,

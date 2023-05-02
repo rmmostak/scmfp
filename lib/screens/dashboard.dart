@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -150,15 +151,43 @@ class _DashboardState extends State<Dashboard> {
     return result;
   }
 
+  Future<bool> requestPerm() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.location,
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.locationWhenInUse,
+      Permission.speech,
+      Permission.storage
+    ].request();
+
+    if (statuses[Permission.location] != null &&
+        statuses[Permission.bluetooth] != null) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration.zero, () async {
+      if (!await requestPerm()) {
+        requestPerm();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Padding(
-            padding: EdgeInsets.all(10),
-            child: Center(
-                child: Column(
+    return Column(mainAxisAlignment: MainAxisAlignment.center, children: <
+        Widget>[
+      Padding(
+        padding: EdgeInsets.all(10),
+        child: Center(
+            child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                   temp == 0.0

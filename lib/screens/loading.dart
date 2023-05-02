@@ -28,10 +28,10 @@ class _LoadingState extends State<Loading> {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token'
         });
-        print('$userURL, \t${response.statusCode}');
+        //print('$userURL, \t${response.statusCode}');
         switch (response.statusCode) {
           case 200:
-            print('Code: ${response.statusCode} \t ${response.body}');
+            //print('Code: ${response.statusCode} \t ${response.body}');
             Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => HomePage()),
                 (route) => false);
