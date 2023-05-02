@@ -1,9 +1,14 @@
 import 'dart:async';
-import 'package:permission_handler/permission_handler.dart';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import '../common/constants.dart';
+import '../common/user_service.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({Key? key}) : super(key: key);
@@ -22,7 +27,14 @@ class _DashboardState extends State<Dashboard> {
   StreamSubscription? scanSubscription;
   FlutterBluePlus flutterBluePlus = FlutterBluePlus.instance;
 
-  bool isLoading = false;
+  bool connecting = false;
+  bool sending = false;
+  bool isConnected = true;
+
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  TextEditingController txtPh = TextEditingController();
+  TextEditingController txtSalinity = TextEditingController();
+  TextEditingController txtTemp = TextEditingController();
 
   Future<void> scanToConnect() async {
     if (connectedDevice != null) {
@@ -56,14 +68,18 @@ class _DashboardState extends State<Dashboard> {
                 List<int> coded = deCode(value, value.length);
                 await Future.delayed(const Duration(milliseconds: 500), () {
                   setState(() {
+                    isConnected = false;
                     ph = ((coded[3]) << 8 | (coded[4])) / 100;
                     phS = getBengali(ph.toString());
+                    txtPh.text = phS;
                     bat = ((coded[15]) << 8 | (coded[16])) * 0.125 - 275;
                     batS = getBengali(bat.toString());
                     temp = ((coded[13]) << 8 | (coded[14])) / 10;
                     tempS = getBengali(temp.toString());
+                    txtTemp.text = '$tempS °সেঃ';
                     salts = ((coded[9]) << 8 | (coded[10]));
                     saltsS = getBengali(salts.toString());
+                    txtSalinity.text = '$saltsS পিপিএম';
                     salt = ((coded[18]) << 8 | (coded[19])) / 1000;
                     saltS = getBengali(salt.toString());
                     tds = ((coded[7]) << 8 | (coded[8]));
@@ -72,7 +88,7 @@ class _DashboardState extends State<Dashboard> {
                         'pH: $ph\nBattery: $bat %\nTemperature: $temp°C\nTDS: $tds ppm\nSalt: $salt ppm');
                     //c.write([0x01, 0x00]);
 
-                    isLoading = false;
+                    connecting = false;
                     connectedDevice = scanResult.device;
                     stat = 'Disconnect';
                   });
@@ -88,14 +104,6 @@ class _DashboardState extends State<Dashboard> {
         }
       }
     });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    // Stop scanning for BLE devices and disconnect from any connected device
-    scanSubscription?.cancel();
-    connectedDevice?.disconnect();
   }
 
   void disconnect() async {
@@ -170,6 +178,63 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
+  String makeResult(
+      String ammonia, String d0, String pH, String salt, String temp) {
+    return 'Result';
+  }
+
+  Future<void> sendData(
+      String ammonia, String d0, String pH, String salt, String temp) async {
+    String result = makeResult(ammonia, d0, pH, salt, temp);
+    String token = await getToken();
+    try {
+      final response = await http.post(Uri.parse(sendURL), headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token'
+      }, body: {
+        'user_id': '0',
+        'ammonia': ammonia,
+        'do': d0,
+        'ph': pH,
+        'salinity': salt,
+        'temp': temp,
+        'result': result,
+      });
+      switch (response.statusCode) {
+        case 200:
+          setState(() {});
+          break;
+        case 422:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$somethingWrong: ${response.statusCode}')),
+          );
+          break;
+        case 403:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$somethingWrong: ${response.statusCode}')),
+          );
+          break;
+        default:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$somethingWrong: ${response.statusCode}')),
+          );
+          break;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('$serverError')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    // Stop scanning for BLE devices and disconnect from any connected device
+    scanSubscription?.cancel();
+    connectedDevice?.disconnect();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -182,137 +247,222 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(mainAxisAlignment: MainAxisAlignment.center, children: <
-        Widget>[
-      Padding(
-        padding: EdgeInsets.all(10),
+    return Container(
+        alignment: Alignment.center,
+        height: MediaQuery.of(context).size.height,
+        color: Colors.white,
         child: Center(
-            child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                  temp == 0.0
-                      ? const Text('কোনো তথ্য পাওয়া যায়নি!')
-                      : Column(
-                          //mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Form(
+                key: formKey,
+                child: ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          flex: 10,
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
+                            color: Colors.white60,
+                            child: Column(
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: Text(
-                                    'পিএইচ: $phS',
-                                    style:
-                                        Theme.of(context).textTheme.bodyText1,
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: Text(
-                                    'তাপমাত্রা: $tempS°সেঃ',
-                                    style:
-                                        Theme.of(context).textTheme.bodyText1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Text(
-                                      'লবণাক্ততা: $saltS এসজি',
-                                      style:
-                                          Theme.of(context).textTheme.bodyText1,
+                                Container(
+                                  padding: EdgeInsets.all(10),
+                                  child: const Text(
+                                    'পিএইচ',
+                                    style: TextStyle(
+                                      fontSize: 16,
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Text(
-                                      'লবণাক্ততা: $saltsS পিপিএম',
-                                      style:
-                                          Theme.of(context).textTheme.bodyText1,
-                                    ),
-                                  ),
-                                ]),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: Text(
-                                    'টিডিএস: $tdsS পিপিএম',
-                                    style:
-                                        Theme.of(context).textTheme.bodyText1,
                                   ),
                                 ),
                                 Container(
-                                  color: Colors.black12,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Text('ব্যাটারী: $batS %',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyText1),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                                  child: Text(
+                                    phS,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
                                   ),
                                 )
                               ],
-                            )
-                          ],
+                            ),
+                          ),
                         ),
-                ])),
-          ),
-          Center(
-              child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              stat == 'Connect'
-                  ? TextButton(
-                      style: TextButton.styleFrom(
-                          textStyle: const TextStyle(fontSize: 16),
-                          backgroundColor: Colors.green.shade600,
-                          primary: Colors.white),
-                      onPressed: () {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        setState(() {
-                          print('Scanning!');
-                          scanToConnect();
-                        });
-                        setState(() {
-                          isLoading = false;
-                        });
-                      },
-                      child: (isLoading)
-                          ? Row(
-                              mainAxisSize: MainAxisSize.max,
-                              children: const [
-                                Text('Connecting device...'),
-                                SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 1.5,
+                        const Spacer(
+                          flex: 1,
+                        ),
+                        Expanded(
+                          flex: 10,
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
+                            color: Colors.white60,
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  child: const Text(
+                                    'তাপমাত্রা',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                                  child: Text(
+                                    '$tempS °সেঃ',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
                                   ),
                                 )
                               ],
-                            )
-                          : const Text('ডিভাইস যুক্ত করুন'),
-                    )
-                  : TextButton(
-                      style: TextButton.styleFrom(
-                          textStyle: const TextStyle(fontSize: 16),
-                          backgroundColor: Colors.redAccent,
-                          primary: Colors.white),
-                      onPressed: disconnect,
-                      child: const Text('ডিভাইসের সংযোগ বিচ্ছিন্ন করুন'),
-                    )
-            ],
-          ))
-        ]);
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          flex: 10,
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
+                            color: Colors.white60,
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(10),
+                                  child: const Text(
+                                    'লবণাক্ততা',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                                  child: Text(
+                                    '$saltsS পিপিএম',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        const Spacer(
+                          flex: 1,
+                        ),
+                        Expanded(
+                          flex: 10,
+                          child: Card(
+                            color: Colors.greenAccent,
+                            clipBehavior: Clip.hardEdge,
+                            child: InkWell(
+                              splashColor: Colors.blue.withAlpha(30),
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('pH: $phS, Temp: $tempS, Salt: $saltsS')),
+                                );
+                              },
+                              child: Container(
+                                alignment: Alignment.center,
+                                padding: const EdgeInsets.all(15),
+                                child: const Text(
+                                  'তথ্য প্রেরণ করুন',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    stat == 'Connect'
+                        ? TextButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateColor.resolveWith(
+                                  (states) => Colors.green),
+                              padding: MaterialStateProperty.resolveWith(
+                                  (states) =>
+                                      const EdgeInsets.symmetric(vertical: 10)),
+                            ),
+                            onPressed: () {
+                              if (formKey.currentState!.validate()) {
+                                setState(() {
+                                  connecting = true;
+                                  scanToConnect();
+                                });
+                              }
+                            },
+                            child: (connecting)
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const [
+                                      Text(
+                                        'ডিভাইস যুক্ত করা হচ্ছে...   ',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                          height: 25,
+                                          width: 25,
+                                          child: Center(
+                                              child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                          ))),
+                                    ],
+                                  )
+                                : const Text(
+                                    'ডিভাইস যুক্ত করুন',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          )
+                        : TextButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateColor.resolveWith(
+                                  (states) => Colors.redAccent),
+                              padding: MaterialStateProperty.resolveWith(
+                                  (states) =>
+                                      const EdgeInsets.symmetric(vertical: 10)),
+                            ),
+                            child: const Text(
+                              'ডিভাইসের সংযোগ বিচ্ছিন্ন করুন',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                connecting = false;
+                                disconnect();
+                              });
+                            }),
+                  ],
+                ))));
   }
 }

@@ -6,6 +6,7 @@ const regURL = '$baseURL/register';
 const logoutURL = '$baseURL/logout';
 const userURL = '$baseURL/user';
 const editUserURL = '$baseURL/save';
+const sendURL = '$baseURL/submit';
 const historyURL = '$baseURL/history';
 
 const serverError = 'তথ্য ভান্ডারে কিছু সমস্যা হয়েছে';//'Server Error';

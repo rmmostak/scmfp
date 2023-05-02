@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.history),
-              label: 'পূর্ব্বর্তী ফলাফল',
+              label: 'পূর্ববর্তী ফলাফল',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
