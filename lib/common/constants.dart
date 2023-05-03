@@ -16,13 +16,12 @@ const somethingWrong = 'কিছু সমস্যা হয়েছে, অন�
 InputDecoration cInputDecoration(String label) {
   return InputDecoration(
       labelText: label,
-      contentPadding: EdgeInsets.all(10),
+      contentPadding: const EdgeInsets.all(10),
       border: const OutlineInputBorder(
           borderSide: BorderSide(
               color: Colors.green,
               width: 1,
-              style: BorderStyle.solid,
-              strokeAlign: StrokeAlign.inside)));
+              style: BorderStyle.solid,)));
 }
 
 TextButton cTextButton(String label, Function onPressed) {
