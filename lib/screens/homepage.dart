@@ -46,6 +46,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
           currentIndex: _selectedIndex,
+          backgroundColor: Colors.green.shade100,
           selectedItemColor: Colors.green.shade700,
           onTap: _onItemTapped,
         ));

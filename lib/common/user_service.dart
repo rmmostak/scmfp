@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:scmfp/common/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -131,7 +132,25 @@ Future<int> getUserId() async {
   return preferences.getInt('userId') ?? 0;
 }
 
+Future<String> getDevice() async {
+  SharedPreferences preferences = await SharedPreferences.getInstance();
+  return preferences.getString('device') ?? '';
+}
+
 Future<bool> logout() async {
   SharedPreferences preferences = await SharedPreferences.getInstance();
   return preferences.remove('token');
+}
+
+String getBengali(String input) {
+  String result = '';
+  final formatter = NumberFormat.decimalPattern('bn_BD');
+  for (int i = 0; i < input.length; i++) {
+    if (int.tryParse(input[i]) != null) {
+      result += formatter.format(int.parse(input[i]));
+    } else {
+      result += input[i];
+    }
+  }
+  return result;
 }
