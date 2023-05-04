@@ -1,5 +1,5 @@
 class DecisionModel {
-  String?  trx_id;
+  int?  trx_id;
   String?  user_id;
   String?  ph;
   String?  d0;
@@ -23,15 +23,15 @@ class DecisionModel {
 
   factory DecisionModel.fromJson(Map<String, dynamic> json) {
     return DecisionModel(
-      trx_id: json['decisions']['id'],
-      user_id: json['decisions']['user_id'],
-      ph: json['decisions']['ph'],
-      d0: json['decisions']['d0'],
-      ammonia: json['decisions']['ammonia'],
-      temp: json['decisions']['temp'],
-      salinity: json['decisions']['salinity'],
-      decision: json['decisions']['result'],
-      dateTime: json['decisions']['created_at']
+      trx_id: json['id'],
+      user_id: json['user_id'],
+      ph: json['ph'],
+      d0: json['do'],
+      ammonia: json['ammonia'],
+      temp: json['temp'],
+      salinity: json['salinity'],
+      decision: json['result'],
+      dateTime: json['created']
     );
   }
 }

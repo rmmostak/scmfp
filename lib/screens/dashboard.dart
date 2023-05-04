@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../common/constants.dart';
 import '../common/user_service.dart';
@@ -26,6 +26,8 @@ class _DashboardState extends State<Dashboard> {
   BluetoothDevice? connectedDevice;
   StreamSubscription? scanSubscription;
   FlutterBluePlus flutterBluePlus = FlutterBluePlus.instance;
+  ScanResult? scann;
+  BluetoothCharacteristic? characteristic;
 
   bool connecting = false;
   bool sending = false;
@@ -36,22 +38,25 @@ class _DashboardState extends State<Dashboard> {
   TextEditingController txtPh = TextEditingController();
   TextEditingController txtSalinity = TextEditingController();
   TextEditingController txtTemp = TextEditingController();
+  TextEditingController deviceController = TextEditingController();
+
+  String timeDate() {
+    DateTime current = DateTime.now();
+    String timeDate = DateFormat('dd-MM-yyyy h:mm a').format(current);
+    return getBengali(timeDate);
+  }
 
   Future<void> scanToConnect() async {
     if (connectedDevice != null) {
-      print('Connected: ${connectedDevice!.id.toString()}');
       connectedDevice!.disconnect();
     }
     if (await flutterBluePlus.isScanning.first) {
-      print('Scanning: ${flutterBluePlus.isScanning.first}');
       flutterBluePlus.stopScan();
     }
     // Start scanning for BLE devices
     scanSubscription = flutterBluePlus.scan().listen((scanResult) async {
       const Duration(seconds: 5);
 
-      print(
-          'Found device: ${scanResult.device.name} (${scanResult.device.id})');
       // If we find a device with the specified MAC address, connect to it
       if (scanResult.device.id.toString() == 'C0:00:00:00:8B:4D') {
         try {
@@ -65,35 +70,9 @@ class _DashboardState extends State<Dashboard> {
             var characteristics = service.characteristics;
             for (BluetoothCharacteristic c in characteristics) {
               if (c.uuid.toString().contains('ff02')) {
-                List<int> value = await c.read();
-                List<int> coded = deCode(value, value.length);
-                await Future.delayed(const Duration(milliseconds: 500), () {
-                  setState(() {
-                    isConnected = false;
-                    ph = ((coded[3]) << 8 | (coded[4])) / 100;
-                    phS = getBengali(ph.toString());
-                    txtPh.text = phS;
-                    bat = ((coded[15]) << 8 | (coded[16])) * 0.125 - 275;
-                    batS = getBengali(bat.toString());
-                    temp = ((coded[13]) << 8 | (coded[14])) / 10;
-                    tempS = getBengali(temp.toString());
-                    txtTemp.text = '$tempS °সেঃ';
-                    salts = ((coded[9]) << 8 | (coded[10]));
-                    saltsS = getBengali(salts.toString());
-                    txtSalinity.text = '$saltsS পিপিএম';
-                    salt = ((coded[18]) << 8 | (coded[19])) / 1000;
-                    saltS = getBengali(salt.toString());
-                    tds = ((coded[7]) << 8 | (coded[8]));
-                    tdsS = getBengali(tds.toString());
-                    print(
-                        'pH: $ph\nBattery: $bat %\nTemperature: $temp°C\nTDS: $tds ppm\nSalt: $salt ppm');
-                    //c.write([0x01, 0x00]);
-
-                    connecting = false;
-                    connectedDevice = scanResult.device;
-                    stat = 'Disconnect';
-                  });
-                });
+                scann = scanResult;
+                characteristic = c;
+                getChars(c, scanResult);
               }
             }
           });
@@ -107,6 +86,39 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
+  Future<void> getChars(
+      BluetoothCharacteristic chars, ScanResult scanResult) async {
+    List<int> value = await chars.read();
+    List<int> coded = deCode(value, value.length);
+    await Future.delayed(const Duration(milliseconds: 500), () {
+      setState(() {
+        isConnected = false;
+        ph = ((coded[3]) << 8 | (coded[4])) / 100;
+        phS = getBengali(ph.toString());
+        txtPh.text = phS;
+        bat = ((coded[15]) << 8 | (coded[16])) * 0.125 - 275;
+        batS = getBengali(bat.toString());
+        temp = ((coded[13]) << 8 | (coded[14])) / 10;
+        tempS = getBengali(temp.toString());
+        txtTemp.text = '$tempS °সেঃ';
+        salts = ((coded[9]) << 8 | (coded[10]));
+        saltsS = getBengali(salts.toString());
+        txtSalinity.text = '$saltsS পিপিএম';
+        salt = ((coded[18]) << 8 | (coded[19])) / 1000;
+        saltS = getBengali(salt.toString());
+        tds = ((coded[7]) << 8 | (coded[8]));
+        tdsS = getBengali(tds.toString());
+        print(
+            'pH: $ph\nBattery: $bat %\nTemperature: $temp°C\nTDS: $tds ppm\nSalt: $salt ppm');
+        //c.write([0x01, 0x00]);
+
+        connecting = false;
+        connectedDevice = scanResult.device;
+        stat = 'Disconnect';
+      });
+    });
+  }
+
   void disconnect() async {
     if (connectedDevice != null) {
       try {
@@ -115,7 +127,6 @@ class _DashboardState extends State<Dashboard> {
         setState(() {
           connectedDevice = null;
           stat = 'Connect';
-          temp = 0.0;
         });
         print(
             'Disconnected from ${connectedDevice!.name} (${connectedDevice!.id})');
@@ -125,7 +136,6 @@ class _DashboardState extends State<Dashboard> {
     } else {
       connectedDevice = null;
       stat = 'Connect';
-      temp = 0.0;
     }
   }
 
@@ -147,21 +157,7 @@ class _DashboardState extends State<Dashboard> {
       pValue[i] = ~(hibit1 | lobit);
       pValue[i - 1] = ~(hibit | lobit1);
     }
-    print("deCoded: $pValue");
     return pValue;
-  }
-
-  String getBengali(String input) {
-    String result = '';
-    final formatter = NumberFormat.decimalPattern('bn_BD');
-    for (int i = 0; i < input.length; i++) {
-      if (int.tryParse(input[i]) != null) {
-        result += formatter.format(int.parse(input[i]));
-      } else {
-        result += input[i];
-      }
-    }
-    return result;
   }
 
   Future<bool> requestPerm() async {
@@ -247,14 +243,14 @@ class _DashboardState extends State<Dashboard> {
       'Authorization': 'Bearer $token'
     }, body: {
       'user_id': uid.toString(),
-      'ammonia': getBengali(ammonia),
-      'do': getBengali(d0),
+      'ammonia': '-', //getBengali(ammonia),
+      'do': '-', //getBengali(d0),
       'ph': getBengali(pH),
       'salinity': getBengali(salt),
       'temp': getBengali(temp),
       'result': result,
+      'created': timeDate()
     });
-    print('Data: $sendURL \t ${response.statusCode},\t${response.body}');
     switch (response.statusCode) {
       case 200:
         setState(() {
@@ -281,11 +277,6 @@ class _DashboardState extends State<Dashboard> {
         );
         break;
     }
-    /*} catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('$serverError')),
-      );
-    }*/
   }
 
   @override
@@ -296,14 +287,39 @@ class _DashboardState extends State<Dashboard> {
     connectedDevice?.disconnect();
   }
 
+  Future<void> showDialogs(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Please give your device address.'),
+            content: TextField(
+              onChanged: (value) {},
+              controller: deviceController,
+              decoration: cInputDecoration('Device Address'),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () async {
+                    SharedPreferences preferences =
+                        await SharedPreferences.getInstance();
+                    await preferences.setString(
+                        'device', deviceController.text ?? '');
+                  },
+                  child: const Text('Save'))
+            ],
+          );
+        });
+  }
+
   @override
   void initState() {
-    super.initState();
     Future.delayed(Duration.zero, () async {
       if (!await requestPerm()) {
         requestPerm();
       }
     });
+    super.initState();
   }
 
   @override
@@ -556,26 +572,59 @@ class _DashboardState extends State<Dashboard> {
                                     ),
                                   ),
                           )
-                        : TextButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateColor.resolveWith(
-                                  (states) => Colors.redAccent),
-                              padding: MaterialStateProperty.resolveWith(
-                                  (states) =>
-                                      const EdgeInsets.symmetric(vertical: 10)),
-                            ),
-                            child: const Text(
-                              'ডিভাইসের সংযোগ বিচ্ছিন্ন করুন',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                connecting = false;
-                                disconnect();
-                              });
-                            }),
+                        : Column(
+                            children: [
+                              Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  child: TextButton(
+                                      style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateColor.resolveWith(
+                                                (states) => Colors.indigo),
+                                        padding:
+                                            MaterialStateProperty.resolveWith(
+                                                (states) =>
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 10)),
+                                      ),
+                                      child: const Text(
+                                        'আবার তথ্য নিন',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          getChars(characteristic!, scann!);
+                                        });
+                                      })),
+                              Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  child: TextButton(
+                                      style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateColor.resolveWith(
+                                                (states) => Colors.redAccent),
+                                        padding:
+                                            MaterialStateProperty.resolveWith(
+                                                (states) =>
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 10)),
+                                      ),
+                                      child: const Text(
+                                        'ডিভাইসের সংযোগ বিচ্ছিন্ন করুন',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          connecting = false;
+                                          disconnect();
+                                        });
+                                      })),
+                            ],
+                          ),
                     const SizedBox(
                       height: 30,
                     ),

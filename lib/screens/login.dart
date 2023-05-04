@@ -20,21 +20,22 @@ class _LoginState extends State<Login> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   TextEditingController txtPhone = TextEditingController();
   TextEditingController txtPassword = TextEditingController();
+  TextEditingController deviceController = TextEditingController();
 
   bool loading = false;
 
   void loginUser() async {
     APIResponse response = await login(txtPhone.text, txtPassword.text);
-    print('$loginURL ${response.data} \n ${response.error}');
     if (response.error == null) {
       User? user = response.data as User?;
 
       SharedPreferences preferences = await SharedPreferences.getInstance();
       await preferences.setString('token', user?.api_token ?? '');
       await preferences.setInt('userId', user?.id ?? 0);
-      Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => HomePage()),
-          (route) => false);
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => HomePage()),
+                (route) => false);
+
     } else {
       setState(() {
         loading = false;
