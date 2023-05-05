@@ -20,8 +20,9 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   int salts = 0, tds = 0;
   double ph = 0.0, bat = 0.0, salt = 0.0, temp = 0.0;
-  String phS = '', batS = '', saltS = '', tempS = '', saltsS = '', tdsS = '';
+  String phS = '-', batS = '', saltS = '', tempS = '-', saltsS = '-', tdsS = '';
   String data = '', stat = 'Connect', outputSt = '';
+  String? device;
 
   BluetoothDevice? connectedDevice;
   StreamSubscription? scanSubscription;
@@ -47,43 +48,49 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> scanToConnect() async {
-    if (connectedDevice != null) {
-      connectedDevice!.disconnect();
-    }
-    if (await flutterBluePlus.isScanning.first) {
-      flutterBluePlus.stopScan();
-    }
-    // Start scanning for BLE devices
-    scanSubscription = flutterBluePlus.scan().listen((scanResult) async {
-      const Duration(seconds: 5);
 
-      // If we find a device with the specified MAC address, connect to it
-      if (scanResult.device.id.toString() == 'C0:00:00:00:8B:4D') {
-        try {
-          flutterBluePlus.stopScan();
-          // Connect to the specified device
-          await scanResult.device.connect();
-          await scanResult.device.requestMtu(512);
-          List<BluetoothService> services =
-              await scanResult.device.discoverServices();
-          services.forEach((service) async {
-            var characteristics = service.characteristics;
-            for (BluetoothCharacteristic c in characteristics) {
-              if (c.uuid.toString().contains('ff02')) {
-                scann = scanResult;
-                characteristic = c;
-                getChars(c, scanResult);
-              }
-            }
-          });
-          print(
-              'Connected to ${scanResult.device.name} (${scanResult.device.id})');
-          // Do something with the connected device here...
-        } catch (e) {
-          print('Error connecting to device: $e');
-        }
+    if (device!.isNotEmpty) {
+      if (connectedDevice != null) {
+        connectedDevice!.disconnect();
       }
-    });
+
+      if (await flutterBluePlus.isScanning.first) {
+        flutterBluePlus.stopScan();
+      }
+      // Start scanning for BLE devices
+      scanSubscription = flutterBluePlus.scan().listen((scanResult) async {
+        const Duration(seconds: 5);
+
+        // If we find a device with the specified MAC address, connect to it
+        if (scanResult.device.id.toString() == device) {
+          try {
+            flutterBluePlus.stopScan();
+            // Connect to the specified device
+            await scanResult.device.connect();
+            await scanResult.device.requestMtu(512);
+            List<BluetoothService> services =
+            await scanResult.device.discoverServices();
+            services.forEach((service) async {
+              var characteristics = service.characteristics;
+              for (BluetoothCharacteristic c in characteristics) {
+                if (c.uuid.toString().contains('ff02')) {
+                  scann = scanResult;
+                  characteristic = c;
+                  getChars(c, scanResult);
+                }
+              }
+            });
+            // Do something with the connected device here...
+          } catch (e) {
+            print('Error connecting to device: $e');
+          }
+        }
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('আপনাকে অবশ্যই প্রথমে ঠিকানা লিখতে হবে')),
+      );
+    }
   }
 
   Future<void> getChars(
@@ -99,18 +106,15 @@ class _DashboardState extends State<Dashboard> {
         bat = ((coded[15]) << 8 | (coded[16])) * 0.125 - 275;
         batS = getBengali(bat.toString());
         temp = ((coded[13]) << 8 | (coded[14])) / 10;
-        tempS = getBengali(temp.toString());
+        tempS = "${getBengali(temp.toString())} °সেঃ";
         txtTemp.text = '$tempS °সেঃ';
         salts = ((coded[9]) << 8 | (coded[10]));
-        saltsS = getBengali(salts.toString());
+        saltsS = "${getBengali(salts.toString())}  পিপিএম";
         txtSalinity.text = '$saltsS পিপিএম';
         salt = ((coded[18]) << 8 | (coded[19])) / 1000;
         saltS = getBengali(salt.toString());
         tds = ((coded[7]) << 8 | (coded[8]));
         tdsS = getBengali(tds.toString());
-        print(
-            'pH: $ph\nBattery: $bat %\nTemperature: $temp°C\nTDS: $tds ppm\nSalt: $salt ppm');
-        //c.write([0x01, 0x00]);
 
         connecting = false;
         connectedDevice = scanResult.device;
@@ -128,8 +132,6 @@ class _DashboardState extends State<Dashboard> {
           connectedDevice = null;
           stat = 'Connect';
         });
-        print(
-            'Disconnected from ${connectedDevice!.name} (${connectedDevice!.id})');
       } catch (e) {
         print('Error disconnecting from device: $e');
       }
@@ -237,7 +239,7 @@ class _DashboardState extends State<Dashboard> {
     String result = makeResult(ammonia, d0, pH, salt, temp);
     String token = await getToken();
     int uid = await getUserId();
-    //try {
+
     final response = await http.post(Uri.parse(sendURL), headers: {
       'Accept': 'application/json',
       'Authorization': 'Bearer $token'
@@ -255,6 +257,7 @@ class _DashboardState extends State<Dashboard> {
       case 200:
         setState(() {
           sending = false;
+          decision = true;
           disconnect();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('তথ্য পাঠানো হয়েছে')),
@@ -287,37 +290,13 @@ class _DashboardState extends State<Dashboard> {
     connectedDevice?.disconnect();
   }
 
-  Future<void> showDialogs(BuildContext context) async {
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Please give your device address.'),
-            content: TextField(
-              onChanged: (value) {},
-              controller: deviceController,
-              decoration: cInputDecoration('Device Address'),
-            ),
-            actions: [
-              TextButton(
-                  onPressed: () async {
-                    SharedPreferences preferences =
-                        await SharedPreferences.getInstance();
-                    await preferences.setString(
-                        'device', deviceController.text ?? '');
-                  },
-                  child: const Text('Save'))
-            ],
-          );
-        });
-  }
-
   @override
   void initState() {
     Future.delayed(Duration.zero, () async {
       if (!await requestPerm()) {
         requestPerm();
       }
+      device = await getDevice();
     });
     super.initState();
   }
@@ -327,13 +306,49 @@ class _DashboardState extends State<Dashboard> {
     return Container(
         alignment: Alignment.center,
         height: MediaQuery.of(context).size.height,
-        color: Colors.white,
+        color: Colors.grey.shade100,
         child: Center(
             child: Form(
                 key: formKey,
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
+                    Card(
+                      color: Colors.white,
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 10,),
+                          const Text(
+                            'বাস্তবায়নে',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600
+                            ),
+                          ),
+                          const SizedBox(height: 10,),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Image(
+                                image: AssetImage('assets/images/mb.png'),
+                                height: 50,
+                              ),
+                              SizedBox(width: 20,),
+                              Image(
+                                image: AssetImage('assets/images/sau.png'),
+                                height: 50,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10,),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
                     Row(
                       mainAxisSize: MainAxisSize.max,
                       children: [
@@ -393,7 +408,7 @@ class _DashboardState extends State<Dashboard> {
                                   padding:
                                       const EdgeInsets.fromLTRB(10, 0, 10, 10),
                                   child: Text(
-                                    '$tempS °সেঃ',
+                                    tempS,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
@@ -433,8 +448,83 @@ class _DashboardState extends State<Dashboard> {
                                   padding:
                                       const EdgeInsets.fromLTRB(10, 0, 10, 10),
                                   child: Text(
-                                    '$saltsS পিপিএম',
+                                    saltsS,
                                     style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        const Spacer(
+                          flex: 1,
+                        ),
+                        Expanded(
+                          flex: 10,
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
+                            color: Colors.white60,
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 15, 0, 10),
+                                  child: const Text(
+                                    'অ্যামোনিয়া',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                                  child: const Text(
+                                    '-',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          flex: 10,
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
+                            color: Colors.white60,
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 15, 0, 10),
+                                  child: const Text(
+                                    'ডিও',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                                  child: const Text(
+                                    '-',
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
                                     ),
@@ -466,11 +556,6 @@ class _DashboardState extends State<Dashboard> {
                                     salts.toString(),
                                     temp.toString(),
                                   );
-                                  if (outputSt != null) {
-                                    setState(() {
-                                      decision = true;
-                                    });
-                                  }
                                 } else {
                                   setState(() {
                                     sending = false;

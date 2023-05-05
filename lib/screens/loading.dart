@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:scmfp/models/api_response.dart';
@@ -15,6 +16,17 @@ class Loading extends StatefulWidget {
 }
 
 class _LoadingState extends State<Loading> {
+  Future<bool> checkConnection() async {
+    ConnectivityResult result = await (Connectivity().checkConnectivity());
+
+    if ((result == ConnectivityResult.mobile) ||
+        (result == ConnectivityResult.wifi)) {
+      return Future<bool>.value(true);
+    } else {
+      return Future<bool>.value(false);
+    }
+  }
+
   Future<void> loadUser() async {
     String token = await getToken();
     if (token == '') {
@@ -53,7 +65,15 @@ class _LoadingState extends State<Loading> {
 
   @override
   void initState() {
-    loadUser();
+    Future.delayed(Duration.zero, () async {
+      if(await checkConnection()) {
+        loadUser();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('আপনার ইন্টারনেট সেবা চালু করে আবার চেষ্টা করুন')),
+        );
+      }
+    });
     super.initState();
   }
 
@@ -79,7 +99,9 @@ class _LoadingState extends State<Loading> {
                 'তথ্য অনুসন্ধান করা হচ্ছে...  ',
                 style: Theme.of(context).textTheme.subtitle1,
               ),
-              const CircularProgressIndicator(semanticsLabel: 'অপেক্ষা করুন...',),
+              const CircularProgressIndicator(
+                semanticsLabel: 'অপেক্ষা করুন...',
+              ),
             ],
           )
         ]),

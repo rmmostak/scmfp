@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../common/constants.dart';
 import '../common/user_service.dart';
@@ -25,6 +26,7 @@ class _ProfileState extends State<Profile> {
   TextEditingController txtAddress = TextEditingController();
   TextEditingController txtGher = TextEditingController();
   TextEditingController txtLocation = TextEditingController();
+  TextEditingController deviceController = TextEditingController();
 
   bool loading = false;
   bool isShow = false;
@@ -107,6 +109,10 @@ class _ProfileState extends State<Profile> {
   void initState() {
     isShow = true;
     loadUserInfo();
+    Future.delayed(Duration.zero, () async {
+      deviceController.text = await getDevice();
+    });
+
     super.initState();
   }
 
@@ -208,6 +214,15 @@ class _ProfileState extends State<Profile> {
                     const SizedBox(
                       height: 20,
                     ),
+                    TextFormField(
+                        keyboardType: TextInputType.text,
+                        controller: deviceController,
+                        validator: (val) =>
+                        val!.isEmpty ? 'আপনাকে অবশ্যই ঠিকানা লিখতে হবে' : null,
+                        decoration: cInputDecoration('ডিভাইসের ঠিকানা')),
+                    const SizedBox(
+                      height: 20,
+                    ),
                     loading
                         ? Container(
                             padding: const EdgeInsets.all(5),
@@ -251,8 +266,12 @@ class _ProfileState extends State<Profile> {
                             ),
                             onPressed: () {
                               if (formKey.currentState!.validate()) {
-                                setState(() {
+                                setState(() async {
                                   loading = true;
+                                  SharedPreferences preferences =
+                                      await SharedPreferences.getInstance();
+                                  await preferences.setString(
+                                      'device', deviceController.text ?? '');
                                   updateUser();
                                 });
                               }
