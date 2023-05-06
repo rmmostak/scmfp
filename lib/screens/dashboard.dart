@@ -189,18 +189,18 @@ class _DashboardState extends State<Dashboard> {
         doI = double.parse(d0),
         tempI = double.parse(temp);
     if (phI < 7.5) {
-      outputSt = "•\tচুন ব্যবহার করুন ২০০ গ্রাম/ডিসে\n";
+      outputSt = "•\tঘেরে চুন ব্যবহার করুন ২০০ গ্রাম/শতক\n";
     } else if (phI > 8.5) {
       outputSt =
-          "•\tতেঁতুল ৫ গ্রাম/ডিসে\n" + "•\tব্লিচিং পাউডার ১০ গ্রাম/ডেসিমেল\n";
+          "•\tঘেরে তেঁতুল ব্যবহার করুন ৫ গ্রাম/শতক\n" + "•\tঘেরে ব্লিচিং পাউডার ব্যবহার করুন ১০ গ্রাম/শতক\n";
     } else {
       outputSt = "";
     }
 
     if (saltI < 10.0) {
-      outputSt = "$outputSt•\tলবণ বা লবণের মিশ্রণ যোগ করুন\n";
+      outputSt = "$outputSt•\tঘেরে লবণ বা লবণের মিশ্রণ যোগ করুন\n";
     } else if (saltI > 20) {
-      outputSt = "$outputSt•\tমিঠা পানির সংযোজন\n";
+      outputSt = "$outputSt•\tঘেরে মিঠা পানির সংযোজন করতে হবে\n";
     } else {
       outputSt = outputSt;
     }
@@ -208,26 +208,26 @@ class _DashboardState extends State<Dashboard> {
     /*
     if (doI < 4.0) {
       outputSt =
-          "$outputSt•\tম্যানুয়ালি (পানিতে বাঁশ পিটিয়ে) বা এয়ারেটর ব্যবহার করে বায়ুচলাচল বৃদ্ধি করুন\n•\tবাজারে পাওয়া অক্সিজেন ট্যাবলেট বা ওষুধ ব্যবহার করুন\n•\tপটাসিয়াম পারম্যাঙ্গনেট (KMnO4) ২ পিপিএম ব্যবহার করুন\n•\tপানি পরিবর্র্তন করুন\n";
+          "$outputSt•\tপানিতে বাঁশ দিয়ে পিটিয়ে বা অ্যারেটর ব্যবহার করে অক্সিজেনের চলাচল বৃদ্ধি করুন\n•\tবাজারে পাওয়া অক্সিজেন ট্যাবলেট বা ওষুধ ব্যবহার করুন\n•\tপটাসিয়াম পারম্যাঙ্গনেট (KMnO4) ২ পিপিএম ব্যবহার করুন\n•\tঘেরের পানি পরিবর্র্তন করুন\n";
     } else if (doI > 8.0) {
-      outputSt = "$outputSt•\tপানি পরিবর্র্তন করুন\n";
+      outputSt = "$outputSt•\tঘেরের পানি পরিবর্র্তন করুন\n";
     } else {
       outputSt = outputSt;
     }
 
     if (ammI > 0.1) {
       outputSt =
-          "$outputSt•\tচিনি বা গুড় যোগ করুন\n•\tলবণ ব্যবহার করুন ৫০০ গ্রাম/ডিসে\n•\tপানি পরিবর্র্তন করুন\n";
+          "$outputSt•\tচচিনি বা চিটাগুড় ব্যবহার করুন\n•\tশতক প্রতি ৫০০ গ্রাম লবণ ব্যবহার করুন\n•\tঘেরের পানি পরিবর্তন করুন\n";
     } else {
       outputSt = outputSt;
     }
 */
 
     if (tempI < 28.0) {
-      outputSt = "$outputSt•\tভূগর্ভস্থ মিঠা পানির সংযোজন\n";
+      outputSt = "$outputSt•\tপরিমানমাফিক ভূগর্ভস্থ মিঠা পানি ঘেরে প্রবেশ করান\n";
     } else if (tempI > 32.0) {
       outputSt =
-          "$outputSt•\tপানি পরিবর্র্তন করুন\n•\tপানির স্তরের গভীরতা বাড়ান\n";
+          "$outputSt•\tঘেরের পানি পরিবর্র্তন করুন\n•\tঘেরে পানির স্তরের গভীরতা বাড়ান\n";
     } else {
       outputSt = outputSt;
     }

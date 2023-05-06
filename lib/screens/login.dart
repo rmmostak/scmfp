@@ -93,7 +93,11 @@ class _LoginState extends State<Login> {
                                 (route) => false);
                       }
                     },
-                    child: const Text('Save'))
+                    child: Container(
+                      color: Colors.green,
+                      padding: const EdgeInsets.all(5),
+                      child:  const Text('Save', style: TextStyle(color: Colors.white),)),
+                    )
               ],
             ),
           );
@@ -106,6 +110,7 @@ class _LoginState extends State<Login> {
     Future.delayed(Duration.zero, () async {
       device = await getDevice();
     });
+    super.initState();
   }
 
   @override
