@@ -197,9 +197,9 @@ class _HistoryState extends State<History> {
                               children: [
                                 Container(
                                   padding:
-                                      const EdgeInsets.fromLTRB(0, 10, 0, 5),
+                                  const EdgeInsets.fromLTRB(0, 10, 0, 5),
                                   child: const Text(
-                                    'ডিও',
+                                    'ওআরপি',
                                     style: TextStyle(
                                       fontSize: 13,
                                     ),
@@ -207,9 +207,9 @@ class _HistoryState extends State<History> {
                                 ),
                                 Container(
                                   padding:
-                                      const EdgeInsets.fromLTRB(0, 0, 0, 5),
+                                  const EdgeInsets.fromLTRB(5, 0, 10, 5),
                                   child: Text(
-                                    '${model.d0}',
+                                    '${model.ammonia} এমভি',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
@@ -234,7 +234,7 @@ class _HistoryState extends State<History> {
                                   padding:
                                       const EdgeInsets.fromLTRB(0, 10, 0, 5),
                                   child: const Text(
-                                    'অ্যামোনিয়া',
+                                    'ডিও',
                                     style: TextStyle(
                                       fontSize: 13,
                                     ),
@@ -242,9 +242,9 @@ class _HistoryState extends State<History> {
                                 ),
                                 Container(
                                   padding:
-                                      const EdgeInsets.fromLTRB(5, 0, 10, 5),
+                                      const EdgeInsets.fromLTRB(0, 0, 0, 5),
                                   child: Text(
-                                    '${model.ammonia}',
+                                    '${model.d0}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,

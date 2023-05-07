@@ -18,9 +18,15 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-  int salts = 0, tds = 0;
+  int salts = 0, tds = 0, ec = 0;
   double ph = 0.0, bat = 0.0, salt = 0.0, temp = 0.0;
-  String phS = '-', batS = '', saltS = '', tempS = '-', saltsS = '-', tdsS = '';
+  String phS = '-',
+      batS = '',
+      saltS = '',
+      tempS = '-',
+      saltsS = '-',
+      tdsS = '',
+      ecS = '-';
   String data = '', stat = 'Connect', outputSt = '';
   String? device;
 
@@ -48,7 +54,6 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> scanToConnect() async {
-
     if (device!.isNotEmpty) {
       if (connectedDevice != null) {
         connectedDevice!.disconnect();
@@ -69,7 +74,7 @@ class _DashboardState extends State<Dashboard> {
             await scanResult.device.connect();
             await scanResult.device.requestMtu(512);
             List<BluetoothService> services =
-            await scanResult.device.discoverServices();
+                await scanResult.device.discoverServices();
             services.forEach((service) async {
               var characteristics = service.characteristics;
               for (BluetoothCharacteristic c in characteristics) {
@@ -109,12 +114,15 @@ class _DashboardState extends State<Dashboard> {
         tempS = "${getBengali(temp.toString())} °সেঃ";
         txtTemp.text = '$tempS °সেঃ';
         salts = ((coded[9]) << 8 | (coded[10]));
-        saltsS = "${getBengali(salts.toString())}  পিপিএম";
+        saltsS = "${getBengali(salts.toString())} পিপিএম";
         txtSalinity.text = '$saltsS পিপিএম';
         salt = ((coded[18]) << 8 | (coded[19])) / 1000;
         saltS = getBengali(salt.toString());
         tds = ((coded[7]) << 8 | (coded[8]));
         tdsS = getBengali(tds.toString());
+
+        ec=((coded[20])<<8 | (coded[21]));
+        ecS="${getBengali(ec.toString())} এমভি";
 
         connecting = false;
         connectedDevice = scanResult.device;
@@ -191,8 +199,8 @@ class _DashboardState extends State<Dashboard> {
     if (phI < 7.5) {
       outputSt = "•\tঘেরে চুন ব্যবহার করুন ২০০ গ্রাম/শতক\n";
     } else if (phI > 8.5) {
-      outputSt =
-          "•\tঘেরে তেঁতুল ব্যবহার করুন ৫ গ্রাম/শতক\n" + "•\tঘেরে ব্লিচিং পাউডার ব্যবহার করুন ১০ গ্রাম/শতক\n";
+      outputSt = "•\tঘেরে তেঁতুল ব্যবহার করুন ৫ গ্রাম/শতক\n" +
+          "•\tঘেরে ব্লিচিং পাউডার ব্যবহার করুন ১০ গ্রাম/শতক\n";
     } else {
       outputSt = "";
     }
@@ -224,7 +232,8 @@ class _DashboardState extends State<Dashboard> {
 */
 
     if (tempI < 28.0) {
-      outputSt = "$outputSt•\tপরিমানমাফিক ভূগর্ভস্থ মিঠা পানি ঘেরে প্রবেশ করান\n";
+      outputSt =
+          "$outputSt•\tপরিমানমাফিক ভূগর্ভস্থ মিঠা পানি ঘেরে প্রবেশ করান\n";
     } else if (tempI > 32.0) {
       outputSt =
           "$outputSt•\tঘেরের পানি পরিবর্র্তন করুন\n•\tঘেরে পানির স্তরের গভীরতা বাড়ান\n";
@@ -245,7 +254,7 @@ class _DashboardState extends State<Dashboard> {
       'Authorization': 'Bearer $token'
     }, body: {
       'user_id': uid.toString(),
-      'ammonia': '-', //getBengali(ammonia),
+      'ammonia': getBengali(ec.toString()),
       'do': '-', //getBengali(d0),
       'ph': getBengali(pH),
       'salinity': getBengali(salt),
@@ -319,15 +328,17 @@ class _DashboardState extends State<Dashboard> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 10,),
+                          const SizedBox(
+                            height: 10,
+                          ),
                           const Text(
                             'বাস্তবায়নে',
                             style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600
-                            ),
+                                fontSize: 16, fontWeight: FontWeight.w600),
                           ),
-                          const SizedBox(height: 10,),
+                          const SizedBox(
+                            height: 10,
+                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const [
@@ -335,14 +346,18 @@ class _DashboardState extends State<Dashboard> {
                                 image: AssetImage('assets/images/mb.png'),
                                 height: 50,
                               ),
-                              SizedBox(width: 20,),
+                              SizedBox(
+                                width: 20,
+                              ),
                               Image(
                                 image: AssetImage('assets/images/sau.png'),
                                 height: 50,
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10,),
+                          const SizedBox(
+                            height: 10,
+                          ),
                         ],
                       ),
                     ),
@@ -473,7 +488,7 @@ class _DashboardState extends State<Dashboard> {
                                   padding:
                                       const EdgeInsets.fromLTRB(0, 15, 0, 10),
                                   child: const Text(
-                                    'অ্যামোনিয়া',
+                                    'ওআরপি',
                                     style: TextStyle(
                                       fontSize: 16,
                                     ),
@@ -482,9 +497,9 @@ class _DashboardState extends State<Dashboard> {
                                 Container(
                                   padding:
                                       const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                                  child: const Text(
-                                    '-',
-                                    style: TextStyle(
+                                  child: Text(
+                                    ecS,
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
                                     ),

@@ -70,7 +70,7 @@ class _LoginState extends State<Login> {
                 value!.isEmpty ? 'আপনাকে অবশ্যই ঠিকানা লিখতে হবে' : null,
                 decoration: const InputDecoration(
                     labelText: 'ডিভাইসের ঠিকানা',
-                    hintText: 'A1:B2:C3:D4:E5:F6',
+                    hintText: 'C0:00:00:00:8B:4D',
                     contentPadding: EdgeInsets.all(10),
                     border: OutlineInputBorder(
                         borderSide: BorderSide(
@@ -96,7 +96,7 @@ class _LoginState extends State<Login> {
                     child: Container(
                       color: Colors.green,
                       padding: const EdgeInsets.all(5),
-                      child:  const Text('Save', style: TextStyle(color: Colors.white),)),
+                      child:  const Text('সংরক্ষণ করুন', style: TextStyle(color: Colors.white),)),
                     )
               ],
             ),

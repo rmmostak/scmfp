@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:scmfp/common/user_service.dart';
+import 'package:scmfp/screens/about.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cultivation.dart';
@@ -33,24 +34,58 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('চিংড়ি'),
-          actions: <Widget>[
-            TextButton(
+            backgroundColor: Colors.grey.shade100,
+            elevation: 0.2,
+            title: const Text(
+              'চিংড়ি',
+              style: TextStyle(color: Colors.black),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => About()),
+                      (route) => false);
+                },
+                child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(15)),
+                      color: Colors.greenAccent,
+                    ),
+                    padding: const EdgeInsets.only(
+                        left: 10, right: 10, top: 5, bottom: 5),
+                    child: const Text(
+                      'যোগাযোগ',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
+                    )),
+              ),
+              TextButton(
                 onPressed: () {
                   Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (context) => Cultivation()),
-                          (route) => false);
+                      (route) => false);
                   //showDialogs(context);
                 },
-                child: const Text(
-                  'চাষ পদ্ধতি',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ))
-          ],
-        ),
+                child: Container(
+                    //color: Colors.green,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(15)),
+                      color: Colors.blue,
+                    ),
+                    padding: const EdgeInsets.only(
+                        left: 10, right: 10, top: 5, bottom: 5),
+                    child: const Text(
+                      'চাষ পদ্ধতি',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    )),
+              ),
+            ]),
         body: pages[_selectedIndex],
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
@@ -68,8 +103,9 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
           currentIndex: _selectedIndex,
-          backgroundColor: Colors.green.shade100,
+          backgroundColor: Colors.grey.shade300,
           selectedItemColor: Colors.green.shade900,
+          elevation: 3,
           selectedLabelStyle:
               const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           onTap: _onItemTapped,
