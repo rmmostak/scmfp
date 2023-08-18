@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/api_response.dart';
@@ -15,7 +16,6 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   TextEditingController txtName = TextEditingController();
   TextEditingController txtPhone = TextEditingController();
@@ -25,7 +25,6 @@ class _RegisterState extends State<Register> {
   bool loading = false;
 
   void regUser() async {
-
     APIResponse apiResponse = APIResponse();
     try {
       final response = await http.post(Uri.parse(regURL), headers: {
@@ -80,7 +79,9 @@ class _RegisterState extends State<Register> {
         appBar: AppBar(
           title: const Text('নিবন্ধন করুন'),
         ),
-        body: Center(
+        body: Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
             child: Form(
               key: formKey,
               child: ListView(
@@ -88,6 +89,7 @@ class _RegisterState extends State<Register> {
                 children: [
                   TextFormField(
                       keyboardType: TextInputType.text,
+                      textCapitalization: TextCapitalization.words,
                       controller: txtName,
                       validator: (val) =>
                       val!.isEmpty ? 'আপনার নামটি লিখুন' : null,
@@ -106,8 +108,10 @@ class _RegisterState extends State<Register> {
                   ),
                   TextFormField(
                       obscureText: true,
+                      keyboardType: TextInputType.phone,
                       controller: txtPassword,
-                      validator: (val) => val!.length < 5 ? 'সর্বনিম্ন ৫টি সংখ্যা দিন' : null,
+                      validator: (val) =>
+                      val!.length < 8 ? 'সর্বনিম্ন ৮টি সংখ্যা দিন' : null,
                       decoration: cInputDecoration('গোপন নম্বর')),
                   const SizedBox(
                     height: 20,
@@ -115,7 +119,10 @@ class _RegisterState extends State<Register> {
                   TextFormField(
                       obscureText: true,
                       controller: txtCPassword,
-                      validator: (val) => val!=txtPassword.text ? 'পুণরায় গোপন সংখ্যাটি লিখুন' : null,
+                      keyboardType: TextInputType.phone,
+                      validator: (val) => val != txtPassword.text
+                          ? 'পুণরায় গোপন সংখ্যাটি লিখুন'
+                          : null,
                       decoration: cInputDecoration('গোপন নম্বর নিশ্চিত করুন')),
                   const SizedBox(
                     height: 20,
@@ -128,8 +135,9 @@ class _RegisterState extends State<Register> {
                       style: ButtonStyle(
                         backgroundColor: MaterialStateColor.resolveWith(
                                 (states) => Colors.green),
-                        padding: MaterialStateProperty.resolveWith((states) =>
-                        const EdgeInsets.symmetric(vertical: 10)),
+                        padding: MaterialStateProperty.resolveWith(
+                                (states) =>
+                            const EdgeInsets.symmetric(vertical: 10)),
                       ),
                       child: const Text(
                         'নিবন্ধন করুন',
@@ -146,24 +154,19 @@ class _RegisterState extends State<Register> {
                   const SizedBox(
                     height: 20,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('আপনার কি ইতোমধ্যে নিবন্ধন করা আছে? '),
-                      GestureDetector(
-                        child: const Text(
-                          'প্রবেশ করুন',
-                          style: TextStyle(
-                            color: Colors.green,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(builder: (context) => Login()),
-                                  (route) => false);
-                        },
-                      )
-                    ],
+                  const Text('আপনার কি ইতোমধ্যে নিবন্ধন করা আছে? '),
+                  GestureDetector(
+                    child: const Text(
+                      'প্রবেশ করুন',
+                      style: TextStyle(
+                        color: Colors.green,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (context) => Login()),
+                              (route) => false);
+                    },
                   )
                 ],
               ),

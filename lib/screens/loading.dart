@@ -43,15 +43,15 @@ class _LoadingState extends State<Loading> {
         //print('$userURL, \t${response.statusCode}');
         switch (response.statusCode) {
           case 200:
-            //print('Code: ${response.statusCode} \t ${response.body}');
+          //print('Code: ${response.statusCode} \t ${response.body}');
             Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => HomePage()),
-                (route) => false);
+                    (route) => false);
             break;
           case 401:
             Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => Login()),
-                (route) => false);
+                    (route) => false);
             break;
           default:
             print(somethingWrong);
@@ -65,13 +65,24 @@ class _LoadingState extends State<Loading> {
 
   @override
   void initState() {
-    Future.delayed(Duration.zero, () async {
+    /*Future.delayed(Duration.zero, () async {
       if(await checkConnection()) {
         loadUser();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('আপনার ইন্টারনেট সেবা চালু করে আবার চেষ্টা করুন')),
         );
+      }
+    });*/
+    Future.delayed(Duration.zero, () async {
+      String token = await getToken();
+      if (token == '') {
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => Login()), (route) => false);
+      } else {
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => HomePage()),
+                (route) => false);
       }
     });
     super.initState();

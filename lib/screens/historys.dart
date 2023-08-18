@@ -60,9 +60,10 @@ class _HistoryState extends State<History> {
                   iconColor: Colors.green,
                   backgroundColor: Colors.blue.shade50,
                   title: Text(
-                    'পরীক্ষণের সময়: \t\t${model.dateTime}',
+                    'পরীক্ষণের সময়:\n${model.dateTime}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w500,
+                      fontSize: 15,
                     ),
                   ),
                   children: [
@@ -163,7 +164,7 @@ class _HistoryState extends State<History> {
                                   padding:
                                       const EdgeInsets.fromLTRB(5, 0, 5, 5),
                                   child: Text(
-                                    '${model.salinity} পিপিএম',
+                                    '${model.salinity} পিপিটি',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
@@ -199,7 +200,7 @@ class _HistoryState extends State<History> {
                                   padding:
                                   const EdgeInsets.fromLTRB(0, 10, 0, 5),
                                   child: const Text(
-                                    'ওআরপি',
+                                    'ডিও',
                                     style: TextStyle(
                                       fontSize: 13,
                                     ),
@@ -207,9 +208,9 @@ class _HistoryState extends State<History> {
                                 ),
                                 Container(
                                   padding:
-                                  const EdgeInsets.fromLTRB(5, 0, 10, 5),
+                                  const EdgeInsets.fromLTRB(0, 0, 0, 5),
                                   child: Text(
-                                    '${model.ammonia} এমভি',
+                                    '${model.d0} পিপিএম',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
@@ -234,7 +235,7 @@ class _HistoryState extends State<History> {
                                   padding:
                                       const EdgeInsets.fromLTRB(0, 10, 0, 5),
                                   child: const Text(
-                                    'ডিও',
+                                    'মন্তব্য',
                                     style: TextStyle(
                                       fontSize: 13,
                                     ),
@@ -244,9 +245,8 @@ class _HistoryState extends State<History> {
                                   padding:
                                       const EdgeInsets.fromLTRB(0, 0, 0, 5),
                                   child: Text(
-                                    '${model.d0}',
+                                    '${model.ammonia}',
                                     style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                     ),
                                   ),

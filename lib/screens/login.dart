@@ -66,11 +66,12 @@ class _LoginState extends State<Login> {
               title: const Text('ডিভাইস এর ঠিকানা দিন'),
               content: TextFormField(
                 controller: deviceController,
+                textCapitalization: TextCapitalization.characters,
                 validator: (value) =>
                 value!.isEmpty ? 'আপনাকে অবশ্যই ঠিকানা লিখতে হবে' : null,
                 decoration: const InputDecoration(
                     labelText: 'ডিভাইসের ঠিকানা',
-                    hintText: 'C0:00:00:00:8B:4D',
+                    hintText: 'C0:00:00:01:BE:4D',
                     contentPadding: EdgeInsets.all(10),
                     border: OutlineInputBorder(
                         borderSide: BorderSide(
@@ -81,23 +82,23 @@ class _LoginState extends State<Login> {
               ),
               actions: [
                 TextButton(
-                    onPressed: () async {
-                      SharedPreferences preferences =
-                      await SharedPreferences.getInstance();
-                      await preferences.setString(
-                          'device', deviceController.text ?? '');
-                      String dev = await getDevice();
-                      if (dev.isNotEmpty) {
-                        Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(builder: (context) => HomePage()),
-                                (route) => false);
-                      }
-                    },
-                    child: Container(
+                  onPressed: () async {
+                    SharedPreferences preferences =
+                    await SharedPreferences.getInstance();
+                    await preferences.setString(
+                        'device', deviceController.text ?? '');
+                    String dev = await getDevice();
+                    if (dev.isNotEmpty) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (context) => HomePage()),
+                              (route) => false);
+                    }
+                  },
+                  child: Container(
                       color: Colors.green,
                       padding: const EdgeInsets.all(5),
                       child:  const Text('সংরক্ষণ করুন', style: TextStyle(color: Colors.white),)),
-                    )
+                )
               ],
             ),
           );
@@ -121,6 +122,7 @@ class _LoginState extends State<Login> {
         ),
         body: Container(
             alignment: Alignment.center,
+            height: MediaQuery.of(context).size.height,
             width: MediaQuery
                 .of(context)
                 .size
@@ -151,6 +153,7 @@ class _LoginState extends State<Login> {
                       ),
                       TextFormField(
                           obscureText: true,
+                          keyboardType: TextInputType.phone,
                           controller: txtPassword,
                           validator: (val) =>
                           val!.isEmpty ? 'গোপন সংখ্যাটি লিখুন' : null,
